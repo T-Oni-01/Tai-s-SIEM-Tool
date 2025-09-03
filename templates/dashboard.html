@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAI'S SIEM Security Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #3498db;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --success: #2ecc71;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --text: #333;
+            --text-light: #7f8c8d;
+            --border: #ddd;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7f9;
+            color: var(--text);
+        }
+
+        .container {
+            max-width: 100%;
+        }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-info {
+            display: flex;
+            gap: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-value {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 16px;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .card-header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .card-header-action {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        .card-header-action:hover {
+            color: var(--accent);
+        }
+
+        .event {
+            border-bottom: 1px solid var(--border);
+            padding: 10px 0;
+        }
+
+        .event:last-child {
+            border-bottom: none;
+        }
+
+        .alert {
+            color: var(--danger);
+            font-weight: bold;
+            background-color: rgba(231, 76, 60, 0.1);
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .warning {
+            color: var(--warning);
+            background-color: rgba(243, 156, 18, 0.1);
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .info {
+            color: var(--accent);
+            background-color: rgba(52, 152, 219, 0.1);
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .success {
+            color: var(--success);
+            background-color: rgba(46, 204, 113, 0.1);
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            text-align: center;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: var(--light);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-start {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-stop {
+            background: var(--danger);
+            color: white;
+        }
+
+        .event-source {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .event-time {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .event-message {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        select, input {
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .severity-critical { border-left: 4px solid var(--danger); }
+        .severity-high { border-left: 4px solid var(--warning); }
+        .severity-medium { border-left: 4px solid #f1c40f; }
+        .severity-low { border-left: 4px solid var(--accent); }
+        .severity-info { border-left: 4px solid var(--success); }
+
+        .trend-up { color: var(--danger); }
+        .trend-down { color: var(--success); }
+
+        .trend-icon::after {
+            content: "↗";
+            margin-left: 3px;
+        }
+
+        .trend-down .trend-icon::after {
+            content: "↘";
+        }
+
+        .event-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .top-threats {
+            margin-top: 15px;
+        }
+
+        .threat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .threat-item:last-child {
+            border-bottom: none;
+        }
+
+        .threat-name {
+            font-weight: 500;
+        }
+
+        .threat-count {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .progress-bar {
+            height: 6px;
+            background-color: var(--light);
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .header-info {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>TAI'S SIEM Security Dashboard</h1>
+            <div class="header-info">
+                <div class="info-item">
+                    <span class="info-value" id="last-update">Just now</span>
+                    <span class="info-label">Last Update</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-value" id="connected-sources">Loading...</span>
+                    <span class="info-label">Sources Connected</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-value" id="system-uptime">Loading...</span>
+                    <span class="info-label">System Uptime</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="filters">
+            <div class="filter-group">
+                <span class="filter-label">Time Range</span>
+                <select id="time-filter">
+                    <option value="1">Last 1 hour</option>
+                    <option value="6">Last 6 hours</option>
+                    <option value="24" selected>Last 24 hours</option>
+                    <option value="72">Last 3 days</option>
+                    <option value="168">Last 7 days</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Event Type</span>
+                <select id="event-filter">
+                    <option value="all">All Events</option>
+                    <option value="alert">Alerts Only</option>
+                    <option value="warning">Warnings Only</option>
+                    <option value="info">Info Only</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Source</span>
+                <select id="source-filter">
+                    <option value="all">All Sources</option>
+                    <option value="firewall">Firewall</option>
+                    <option value="ids">IDS</option>
+                    <option value="server">Server</option>
+                    <option value="workstation">Workstation</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Search</span>
+                <input type="text" id="search-filter" placeholder="Search events...">
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <div class="card" style="grid-column: span 2;">
+                <div class="card-header">
+                    Event Timeline
+                    <div class="card-header-actions">
+                        <button class="card-header-action" onclick="exportData('timeline')">Export</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="timelineChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    System Status
+                    <div class="card-header-actions">
+                        <button class="card-header-action" onclick="refreshSystemStatus()">Refresh</button>
+                    </div>
+                </div>
+                <div id="system-status">
+                    <p>SIEM Status: <span id="siem-status">Running</span></p>
+                    <button class="btn-start" onclick="startSIEM()">Start</button>
+                    <button class="btn-stop" onclick="stopSIEM()">Stop</button>
+
+                    <div class="stats-grid" style="margin-top: 20px;">
+                        <div class="stat">
+                            <div class="stat-value" id="eps-value">0</div>
+                            <div class="stat-label">Events/sec</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" id="process-time">0ms</div>
+                            <div class="stat-label">Avg Process Time</div>
+                        </div>
+                    </div>
+
+                    <div class="card-header">Storage</div>
+                    <div class="stat-label">Disk Usage: <span id="disk-usage">0</span>%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="disk-usage-bar" style="width: 0%;"></div>
+                    </div>
+
+                    <div class="stat-label" style="margin-top: 10px;">Memory Usage: <span id="memory-usage">0</span>%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="memory-usage-bar" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    Recent Events
+                    <div class="card-header-actions">
+                        <button class="card-header-action" onclick="loadMoreEvents()">Load More</button>
+                    </div>
+                </div>
+                <div class="event-list" id="events-list">
+                    <!-- Events will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    Statistics
+                    <div class="card-header-actions">
+                        <button class="card-header-action" onclick="refreshStats()">Refresh</button>
+                    </div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat">
+                        <div class="stat-value" id="total-events">0</div>
+                        <div class="stat-label">Total Events</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="alerts-hour">0</div>
+                        <div class="stat-label">Alerts (last hour)</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="alerts-today">0</div>
+                        <div class="stat-label">Alerts (today)</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="unique-sources">0</div>
+                        <div class="stat-label">Unique Sources</div>
+                    </div>
+                </div>
+                <div class="card-header">Event Sources</div>
+                <div class="chart-container">
+                    <canvas id="sourceChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    Alert Summary
+                    <div class="card-header-actions">
+                        <button class="card-header-action" onclick="viewAllAlerts()">View All</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="alertChart"></canvas>
+                </div>
+
+                <div class="top-threats">
+                    <div class="card-header">Top Threats</div>
+                    <div id="top-threats-list">
+                        <!-- Top threats will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    Geographic Distribution
+                    <div class="card-header-actions">
+                        <button class="card-header-action" onclick="showGeoDetails()">Details</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="geoChart"></canvas>
+                </div>
+                <div class="stats-grid" style="margin-top: 15px;">
+                    <div class="stat">
+                        <div class="stat-value" id="top-country-count">0</div>
+                        <div class="stat-label">Top: <span id="top-country-name">Loading...</span></div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="unique-countries">0</div>
+                        <div class="stat-label">Countries</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // Debug mode
+    const DEBUG = true;
+
+    // Initialize charts
+    const timelineCtx = document.getElementById('timelineChart').getContext('2d');
+    const sourceCtx = document.getElementById('sourceChart').getContext('2d');
+    const alertCtx = document.getElementById('alertChart').getContext('2d');
+    const geoCtx = document.getElementById('geoChart').getContext('2d');
+
+    const timelineChart = new Chart(timelineCtx, {
+        type: 'line',
+        data: {
+            datasets: [{
+                label: 'Events',
+                data: [],
+                borderColor: '#3498db',
+                tension: 0.1,
+                fill: true,
+                backgroundColor: 'rgba(52, 152, 219, 0.1)'
+            }, {
+                label: 'Alerts',
+                data: [],
+                borderColor: '#e74c3c',
+                tension: 0.1,
+                fill: true,
+                backgroundColor: 'rgba(231, 76, 60, 0.1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'hour'
+                    }
+                },
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            }
+        }
+    });
+
+    const sourceChart = new Chart(sourceCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [],
+            datasets: [{
+                data: [],
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                    '#9966FF', '#FF9F40', '#8ac248', '#22bbd0',
+                    '#ff6d67', '#29b6f6'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12
+                    }
+                }
+            }
+        }
+    });
+
+    const alertChart = new Chart(alertCtx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Alerts by Type',
+                data: [],
+                backgroundColor: '#FF6384'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            indexAxis: 'y'
+        }
+    });
+
+    const geoChart = new Chart(geoCtx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Events by Source',
+                data: [],
+                backgroundColor: '#36A2EB'
+           }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales:{
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Function to update memory usage color based on percentage
+    function updateMemoryColor(usage) {
+        const memoryBar = document.getElementById('memory-usage-bar');
+        if (usage < 60) {
+            memoryBar.style.backgroundColor = '#2ecc71'; // Green
+        } else if (usage < 80) {
+            memoryBar.style.backgroundColor = '#f39c12'; // Orange
+        } else {
+            memoryBar.style.backgroundColor = '#e74c3c'; // Red
+        }
+    }
+
+    // Function to fetch events from the server
+    async function fetchEvents() {
+        try {
+            if (DEBUG) console.log('Fetching events from /api/events');
+            const response = await fetch('/api/events');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const events = await response.json();
+            if (DEBUG) console.log('Events received:', events.length);
+            populateEvents(events);
+            return events;
+        } catch (error) {
+            console.error('Error fetching events:', error);
+            // Show error in events list
+            document.getElementById('events-list').innerHTML =
+                '<div class="event"><div class="event-message">Error loading events. Please check if the SIEM is running.</div></div>';
+            return [];
+        }
+    }
+
+    // Function to populate events list
+    function populateEvents(events) {
+        const eventsList = document.getElementById('events-list');
+        eventsList.innerHTML = '';
+
+        if (!events || events.length === 0) {
+            eventsList.innerHTML = '<div class="event"><div class="event-message">No events found</div></div>';
+            return;
+        }
+
+        // Show only the last 20 events
+        const recentEvents = events.slice(-20);
+
+        recentEvents.forEach(event => {
+            const eventEl = document.createElement('div');
+            const severity = event.alerts && event.alerts.length > 0 ?
+                            (event.alerts[0].severity || 'info') : 'info';
+            eventEl.className = `event severity-${severity}`;
+
+            let eventHTML = `
+                <div>
+                    <span class="event-source">${event.source || 'Unknown'}</span>
+                    - <span class="event-time">${new Date(event.timestamp).toLocaleString()}</span>
+                </div>
+                <div class="event-message">
+            `;
+
+            if (event.raw_log && event.raw_log.message) {
+                eventHTML += event.raw_log.message.length > 100
+                    ? event.raw_log.message.substring(0, 100) + '...'
+                    : event.raw_log.message;
+            } else if (event.raw_log && event.raw_log.EventID) {
+                eventHTML += `Event ID: ${event.raw_log.EventID}`;
+            } else if (event.raw_log && event.raw_log.signature) {
+                eventHTML += event.raw_log.signature;
+            } else {
+                eventHTML += 'No message available';
+            }
+
+            eventHTML += '</div>';
+
+            if (event.alerts && event.alerts.length > 0) {
+                eventHTML += `<div class="alert">ALERTS: ${event.alerts.length}</div>`;
+            }
+
+            if (event.anomalies && event.anomalies.length > 0) {
+                eventHTML += `<div class="warning">ANOMALIES: ${event.anomalies.length}</div>`;
+            }
+
+            eventEl.innerHTML = eventHTML;
+            eventsList.appendChild(eventEl);
+        });
+    }
+
+    // Function to update all dashboard data
+    async function updateDashboard() {
+        try {
+            if (DEBUG) console.log('Updating dashboard...');
+
+            // Update stats
+            if (DEBUG) console.log('Fetching stats from /api/stats');
+            const statsResponse = await fetch('/api/stats');
+            if (statsResponse.ok) {
+                const stats = await statsResponse.json();
+                if (DEBUG) console.log('Stats received:', stats);
+
+                document.getElementById('total-events').textContent = stats.total_events || 0;
+                document.getElementById('alerts-hour').textContent = stats.alerts_last_hour || 0;
+                document.getElementById('alerts-today').textContent = stats.alerts_today || 0;
+                document.getElementById('unique-sources').textContent = stats.unique_sources || 0;
+
+                // Update source chart
+                if (stats.top_sources) {
+                    const sources = Object.keys(stats.top_sources);
+                    const sourceCounts = sources.map(s => stats.top_sources[s]);
+
+                    sourceChart.data.labels = sources;
+                    sourceChart.data.datasets[0].data = sourceCounts;
+                    sourceChart.update();
+                }
+
+                // Update alert chart
+                if (stats.alert_types) {
+                    const alertTypes = Object.keys(stats.alert_types);
+                    const alertCounts = alertTypes.map(t => stats.alert_types[t]);
+
+                    alertChart.data.labels = alertTypes;
+                    alertChart.data.datasets[0].data = alertCounts;
+                    alertChart.update();
+                }
+            } else {
+                if (DEBUG) console.error('Stats response not OK:', statsResponse.status);
+            }
+
+            // Update system status
+            if (DEBUG) console.log('Fetching system status from /api/system-status');
+            const statusResponse = await fetch('/api/system-status');
+            if (statusResponse.ok) {
+                const status = await statusResponse.json();
+                if (DEBUG) console.log('System status received:', status);
+
+                document.getElementById('disk-usage').textContent = status.disk_usage;
+                document.getElementById('disk-usage-bar').style.width = `${status.disk_usage}%`;
+
+                document.getElementById('memory-usage').textContent = status.memory_usage;
+                document.getElementById('memory-usage-bar').style.width = `${status.memory_usage}%`;
+                updateMemoryColor(status.memory_usage);
+
+                document.getElementById('connected-sources').textContent = status.connected_sources;
+                document.getElementById('system-uptime').textContent = status.system_uptime;
+                document.getElementById('eps-value').textContent = status.eps;
+                document.getElementById('process-time').textContent = `${status.process_time}ms`;
+            } else {
+                if (DEBUG) console.error('System status response not OK:', statusResponse.status);
+            }
+
+            // Update top threats
+            if (DEBUG) console.log('Fetching top threats from /api/top-threats');
+            const threatsResponse = await fetch('/api/top-threats');
+            if (threatsResponse.ok) {
+                const threats = await threatsResponse.json();
+                if (DEBUG) console.log('Top threats received:', threats);
+                populateThreats(threats);
+            } else {
+                if (DEBUG) console.error('Top threats response not OK:', threatsResponse.status);
+            }
+
+            // Update geo data
+            if (DEBUG) console.log('Fetching geo data from /api/geo-data');
+            const geoResponse = await fetch('/api/geo-data');
+            if (geoResponse.ok) {
+                const geoData = await geoResponse.json();
+                if (DEBUG) console.log('Geo data received:', geoData);
+
+                geoChart.data.labels = geoData.countries;
+                geoChart.data.datasets[0].data = geoData.counts;
+                geoChart.update();
+
+                document.getElementById('top-country-count').textContent = geoData.top_country.count;
+                document.getElementById('top-country-name').textContent = geoData.top_country.name;
+                document.getElementById('unique-countries').textContent = geoData.unique_countries;
+            } else {
+                if (DEBUG) console.error('Geo data response not OK:', geoResponse.status);
+            }
+
+            // Update timeline data
+            if (DEBUG) console.log('Fetching timeline data from /api/timeline-data');
+            const timelineResponse = await fetch('/api/timeline-data');
+            if (timelineResponse.ok) {
+                const timelineData = await timelineResponse.json();
+                if (DEBUG) console.log('Timeline data received:', timelineData);
+
+                timelineChart.data.datasets[0].data = timelineData.events;
+                timelineChart.data.datasets[1].data = timelineData.alerts;
+                timelineChart.update();
+            } else {
+                if (DEBUG) console.error('Timeline data response not OK:', timelineResponse.status);
+            }
+
+            // Update last update time
+            document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+
+            // Refresh events
+            await fetchEvents();
+
+        } catch (error) {
+            console.error('Error updating dashboard:', error);
+        }
+    }
+
+    // Function to populate top threats list
+    function populateThreats(threats) {
+        const threatsList = document.getElementById('top-threats-list');
+        threatsList.innerHTML = '';
+
+        if (!threats || threats.length === 0) {
+            threatsList.innerHTML = '<div class="threat-item"><span class="threat-name">No threats detected</span><span class="threat-count">0</span></div>';
+            return;
+        }
+
+        threats.forEach(threat => {
+            const threatEl = document.createElement('div');
+            threatEl.className = 'threat-item';
+            threatEl.innerHTML = `
+                <span class="threat-name">${threat.name}</span>
+                <span class="threat-count">${threat.count}</span>
+            `;
+            threatsList.appendChild(threatEl);
+        });
+    }
+
+    // Function to start SIEM
+    async function startSIEM() {
+        try {
+            const response = await fetch('/start');
+            if (response.ok) {
+                document.getElementById('siem-status').textContent = 'Running';
+                alert('SIEM started successfully');
+                // Refresh dashboard after starting
+                setTimeout(updateDashboard, 2000);
+            } else {
+                throw new Error('Failed to start SIEM');
+            }
+        } catch (error) {
+            console.error('Error starting SIEM:', error);
+            alert('Error starting SIEM: ' + error.message);
+        }
+    }
+
+    // Function to stop SIEM
+    async function stopSIEM() {
+        try {
+            const response = await fetch('/stop');
+            if (response.ok) {
+                document.getElementById('siem-status').textContent = 'Stopped';
+                alert('SIEM stopped successfully');
+            } else {
+                throw new Error('Failed to stop SIEM');
+            }
+        } catch (error) {
+            console.error('Error stopping SIEM:', error);
+            alert('Error stopping SIEM: ' + error.message);
+        }
+    }
+
+    // Function to load more events
+    function loadMoreEvents() {
+        alert("Loading more events...");
+        // Implementation would fetch additional events from the server
+    }
+
+    // Function to refresh stats
+    function refreshStats() {
+        updateDashboard();
+    }
+
+    // Function to refresh system status
+    function refreshSystemStatus() {
+        updateDashboard();
+    }
+
+    // Function to view all alerts
+    function viewAllAlerts() {
+        alert("Showing all alerts...");
+        // Implementation would show all alerts in a modal or new page
+    }
+
+    // Function to show geo details
+    function showGeoDetails() {
+        alert("Showing geographic details...");
+        // Implementation would show detailed geographic information
+    }
+
+    // Function to export data
+    function exportData(type) {
+        alert(`Exporting ${type} data...`);
+        // Implementation would export data in CSV or JSON format
+    }
+
+    // Function to test the system
+    async function testSystem() {
+        try {
+            const response = await fetch('/debug/test-alert');
+            const result = await response.json();
+            alert(`Test completed: ${result.status}. Total events: ${result.total_events}`);
+            updateDashboard();
+        } catch (error) {
+            console.error('Error testing system:', error);
+            alert('Error testing system: ' + error.message);
+        }
+    }
+
+    // Function to debug system
+    async function debugSystem() {
+        try {
+            const response = await fetch('/debug/system');
+            const result = await response.json();
+            console.log('Debug system info:', result);
+            alert(`SIEM running: ${result.siem_running}. Collector threads: ${result.collector_threads.length}`);
+        } catch (error) {
+            console.error('Error debugging system:', error);
+            alert('Error debugging system: ' + error.message);
+        }
+    }
+
+    // Function to debug events
+    async function debugEvents() {
+        try {
+            const response = await fetch('/debug/events');
+            const result = await response.json();
+            console.log('Debug events info:', result);
+            alert(`Total events: ${result.total_events}. Sources: ${result.event_sources.join(', ')}`);
+        } catch (error) {
+            console.error('Error debugging events:', error);
+            alert('Error debugging events: ' + error.message);
+        }
+    }
+
+    // Initial setup
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add debug buttons to the header
+        const header = document.querySelector('header');
+        const debugDiv = document.createElement('div');
+        debugDiv.innerHTML = `
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button onclick="testSystem()" style="background: #9b59b6; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer;">Test Alert</button>
+                <button onclick="debugSystem()" style="background: #e67e22; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer;">Debug System</button>
+                <button onclick="debugEvents()" style="background: #27ae60; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer;">Debug Events</button>
+            </div>
+        `;
+        header.appendChild(debugDiv);
+
+
+    });
+
+    // Add event listeners for filters
+    document.getElementById('time-filter').addEventListener('change', updateDashboard);
+    document.getElementById('event-filter').addEventListener('change', updateDashboard);
+    document.getElementById('source-filter').addEventListener('change', updateDashboard);
+    document.getElementById('search-filter').addEventListener('input', function(e) {
+        // Simple search implementation
+        const searchTerm = e.target.value.toLowerCase();
+        const events = document.querySelectorAll('.event');
+
+        events.forEach(event => {
+            const text = event.textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+                event.style.display = 'block';
+            } else {
+                event.style.display = 'none';
+            }
+        });
+    });
+        // Update dashboard immediately
+        updateDashboard();
+
+        // Update dashboard every 5 seconds for real-time monitoring
+        setInterval(updateDashboard, 5000);
+</script>
+
+</body>
+</html>

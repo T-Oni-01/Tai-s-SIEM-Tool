@@ -1,0 +1,59 @@
+2025-08-31 17:03:29,148 - SIEMCore - INFO - All collectors started
+2025-08-31 17:03:36,162 - SIEMCore - INFO - All collectors started
+2025-08-31 17:04:25,516 - SIEMCore - INFO - All collectors started
+2025-08-31 17:08:14,327 - SIEMCore - INFO - All collectors started
+2025-08-31 17:08:19,048 - SIEMCore - INFO - All collectors started
+2025-08-31 17:12:15,114 - SIEMCore - INFO - All collectors started
+2025-08-31 17:12:22,580 - SIEMCore - INFO - All collectors started
+2025-08-31 17:12:27,110 - SIEMCore - INFO - All collectors started
+2025-08-31 17:29:24,808 - SIEMCore - INFO - All collectors started
+2025-08-31 17:29:52,118 - SIEMCore - INFO - All collectors started
+2025-08-31 17:30:23,310 - SIEMCore - INFO - All collectors started
+2025-08-31 17:30:52,984 - SIEMCore - INFO - All collectors started
+2025-08-31 17:31:24,015 - SIEMCore - INFO - All collectors started
+2025-08-31 17:33:37,747 - SIEMCore - INFO - All collectors started
+2025-08-31 17:34:09,668 - SIEMCore - ERROR - Error monitoring network: No module named 'psutil'
+2025-08-31 17:34:09,670 - SIEMCore - INFO - All collectors started
+2025-08-31 17:34:09,675 - SIEMCore - ERROR - Error monitoring processes: No module named 'psutil'
+2025-08-31 17:34:39,674 - SIEMCore - ERROR - Error monitoring network: No module named 'psutil'
+2025-08-31 17:47:05,749 - SIEMCore - INFO - All collectors started
+2025-08-31 17:47:14,446 - SIEMCore - INFO - All collectors started
+2025-08-31 18:04:58,908 - SIEMCore - INFO - All collectors started
+2025-08-31 18:05:04,105 - SIEMCore - INFO - All collectors started
+2025-08-31 18:17:56,777 - SIEMCore - INFO - All collectors started
+2025-08-31 18:18:03,222 - SIEMCore - INFO - All collectors started
+2025-08-31 18:19:04,413 - SIEMCore - INFO - All collectors started
+2025-08-31 18:33:04,413 - SIEMCore - INFO - All collectors started
+2025-08-31 18:33:08,724 - SIEMCore - INFO - All collectors started
+2025-08-31 18:33:58,220 - SIEMCore - INFO - All collectors started
+2025-08-31 18:36:55,979 - SIEMCore - INFO - All collectors started
+2025-08-31 18:37:01,981 - SIEMCore - INFO - All collectors started
+2025-08-31 18:40:59,946 - SIEMCore - INFO - All collectors started
+2025-08-31 18:41:03,759 - SIEMCore - INFO - All collectors started
+2025-08-31 18:41:50,724 - SIEMCore - INFO - All collectors started
+2025-08-31 18:44:59,979 - SIEMCore - INFO - All collectors started
+2025-08-31 18:45:10,423 - SIEMCore - INFO - All collectors started
+2025-08-31 18:57:36,818 - SIEMCore - INFO - All collectors started
+2025-08-31 18:57:43,953 - SIEMCore - INFO - All collectors started
+2025-08-31 19:10:52,910 - SIEMCore - INFO - All collectors started
+2025-08-31 19:10:59,781 - SIEMCore - INFO - All collectors started
+2025-08-31 19:16:57,049 - SIEMCore - INFO - All collectors started
+2025-08-31 19:17:04,187 - SIEMCore - INFO - All collectors started
+2025-08-31 19:21:19,793 - SIEMCore - INFO - All collectors started
+2025-08-31 19:21:26,865 - SIEMCore - INFO - All collectors started
+2025-08-31 19:27:43,138 - SIEMCore - INFO - All collectors started
+2025-08-31 19:27:49,915 - SIEMCore - INFO - All collectors started
+2025-08-31 19:32:47,340 - SIEMCore - INFO - All collectors started
+2025-08-31 19:32:53,928 - SIEMCore - INFO - All collectors started
+2025-08-31 19:43:59,115 - SIEMCore - INFO - All collectors started
+2025-08-31 19:44:06,848 - SIEMCore - INFO - All collectors started
+2025-08-31 19:50:18,973 - SIEMCore - INFO - All collectors started
+2025-08-31 19:50:26,090 - SIEMCore - INFO - All collectors started
+2025-08-31 19:57:10,258 - SIEMCore - INFO - All collectors started
+2025-08-31 19:57:17,629 - SIEMCore - INFO - All collectors started
+2025-09-02 10:41:16,436 - SIEMCore - INFO - All collectors started
+2025-09-02 10:41:28,550 - SIEMCore - INFO - All collectors started
+2025-09-02 10:50:32,584 - SIEMCore - ERROR - Error collecting firewall logs: Command '['powershell', "Get-Content 'C:\\Windows\\System32\\LogFiles\\Firewall\\pfirewall.log' -Tail 20 | ConvertFrom-Csv -Delimiter ' ' -Header 'Date', 'Time', 'Action', 'Protocol', 'Src-IP', 'Dst-IP', 'Src-Port', 'Dst-Port', 'Size', 'TCPFlags', 'TCPSyn', 'TCPAck', 'TCPWin', 'ICMPType', 'ICMPCode', 'Info', 'Path'"]' timed out after -351.4219999999914 seconds
+2025-09-02 10:50:35,724 - SIEMCore - ERROR - Error collecting Windows logs: Command '['powershell', "Get-WinEvent -FilterHashtable @{LogName='Security'; StartTime=(Get-Date).AddMinutes(-5)} | Select-Object TimeCreated, Id, ProviderName, Message | ConvertTo-Json"]' timed out after -191.53100000001723 seconds
+2025-09-03 08:17:42,875 - SIEMCore - INFO - All collectors started
+2025-09-03 08:17:58,603 - SIEMCore - INFO - All collectors started
