@@ -32,3 +32,8 @@ Detect brute-force login attempts across systems
 Monitor network connections for suspicious activity
 Correlate multiple low-level alerts into high-confidence threats
 Provide visibility into insider threats, malware, and privilege misuse
+
+
+<img width="959" height="449" alt="First Test Run of SIEM_Simulated" src="https://github.com/user-attachments/assets/f5bfb6e4-2531-477d-9cf9-5ea0596dde0d" />
+
+<img width="957" height="539" alt="Running Code" src="https://github.com/user-attachments/assets/8c467df5-974f-4c8c-a029-665a15bb1368" />
